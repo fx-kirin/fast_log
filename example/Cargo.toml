@@ -12,6 +12,9 @@ publish = false
 name = "custom_appender"
 path = "src/custom_appender.rs"
 [[bin]]
+name = "flush_later"
+path = "src/flush_later.rs"
+[[bin]]
 name = "split_log"
 path = "src/split_log.rs"
 [[bin]]

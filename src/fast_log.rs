@@ -13,8 +13,8 @@ use crate::plugin::file_split::{FileSplitAppender, RollingType, Packer};
 use crate::wait::FastLogWaitGroup;
 use std::result::Result::Ok;
 use std::time::{SystemTime, Duration};
-use std::sync::Arc;
 use std::sync::mpsc::SendError;
+use std::collections::VecDeque;
 use may::go;
 
 lazy_static! {
@@ -178,6 +178,7 @@ pub fn init_custom_log(
     //main recv data
     let wait_group_main = wait_group.clone();
     go!(move ||{
+        let mut log_stack = VecDeque::<FastLogRecord>::with_capacity(16);
         loop {
             let data = main_recv.recv();
             if data.is_ok() {
@@ -186,8 +187,13 @@ pub fn init_custom_log(
                     back_sender.send(s);
                     drop(wait_group_main);
                     break;
+                } else if s.command.eq(&Command::CommandFlush) {
+                    while let Some(log_record) = log_stack.pop_front() {
+                        back_sender.send(log_record);
+                    }
+                } else {
+                    log_stack.push_back(s);
                 }
-                back_sender.send(s);
             }
         }
     });
