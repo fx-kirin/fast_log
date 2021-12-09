@@ -60,20 +60,39 @@ impl RecordFormat for FastLogFormatRecord {
         let now = now.add(self.duration).naive_utc();
         match arg.level {
             Level::Warn | Level::Error => {
-                data = format!(
-                    "{:36} {} {} - {}  {}\n",
-                    &now,
-                    arg.level,
-                    arg.module_path,
-                    arg.args,
-                    arg.format_line()
-                );
+                if arg.line.is_some(){
+                    data = format!(
+                        "{:36} {} {}:{} - {}  {}\n",
+                        &now,
+                        arg.level,
+                        arg.module_path,
+                        arg.line.unwrap(),
+                        arg.args,
+                        arg.format_line()
+                    );
+                } else {
+                    data = format!(
+                        "{:36} {} {} - {}  {}\n",
+                        &now,
+                        arg.level,
+                        arg.module_path,
+                        arg.args,
+                        arg.format_line()
+                    );
+                }
             }
             _ => {
-                data = format!(
-                    "{:36} {} {} - {}\n",
-                    &now, arg.level, arg.module_path, arg.args
-                );
+                if arg.line.is_some(){
+                    data = format!(
+                        "{:36} {} {}:{} - {}\n",
+                        &now, arg.level, arg.module_path, arg.line.unwrap(), arg.args
+                    );
+                } else {
+                    data = format!(
+                        "{:36} {} {} - {}\n",
+                        &now, arg.level, arg.module_path, arg.args
+                    );
+                }
             }
         }
         arg.formated = data;
